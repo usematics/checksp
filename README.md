@@ -1,4 +1,4 @@
-# Checksps
+# Checksp
 
 This is a test project to give Go a try. Concepts to explore: http calls, handling JSON responeses and csv files
 
@@ -41,3 +41,7 @@ The JSON I'm trying to prcess looks something like:
   }
 ]
 ```
+
+## Notes
+
+In order to understand unmarshalling and constructing the structs, it was easier to reverse engenieer the structs and marshall them first. That is [testJSON.go](testJson.go), with the struct correctly shape it was a breeze to handle the JSON response.
