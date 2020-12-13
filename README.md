@@ -7,11 +7,11 @@ I read species from a csv file, chcek if we have data abot it on the API and if 
 
 The JSON I'm trying to prcess looks something like: 
 
-```
+```JSON
 [
   {
     "_id": "Zaretis crawfordhilli",
-    "count": 180,
+    "count": 2,
     "data": {
       "Quebrada Escondida": [
         {
