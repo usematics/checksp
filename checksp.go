@@ -7,30 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"regexp"
 	s "strings"
 )
-
-type vocuher struct {
-	ID               string `json:"_id"`
-	HerbivoreSpecies string `json:"herbivoreSpecies"`
-	CollectionDate   string `json:"collectionDate"`
-	HerbivoreFamily  string `json:"herbivoreFamily"`
-	Latitude         string `json:"latitude"`
-	Locality         string `json:"locality"`
-	Longitude        string `json:"longitude"`
-	Voucher          string `json:"voucher"`
-}
-
-type spPoints struct {
-	ID    string               `json:"_id"`
-	Count int                  `json:"count"`
-	Data  map[string][]vocuher `json:"data"`
-}
-
-type jsonResponse struct {
-	Response []spPoints `json:"array"`
-}
 
 //getSpPoints checks if there is data on a given species
 func getSpPoints(species string) bool {
@@ -49,7 +27,7 @@ func getSpPoints(species string) bool {
 		fmt.Println("Error reading", species, "from API")
 		return false
 	}
-	var respB []spPoints
+	var respB []SpPoints
 	err = json.Unmarshal([]byte(body), &respB)
 	if err != nil {
 		fmt.Println("Error unmarshalling", species)
@@ -78,26 +56,31 @@ func getSpPoints(species string) bool {
 //Outpust a csv with species with no records
 func main() {
 	//	TestJSON()
-	csvFile, err := os.Open("paginasptx.csv")
+	outputFile := "faltanv2.csv"
+	inputFile := "faltan.csv"
+	csvFile, err := os.Open(inputFile)
 	HandleError(err)
 	fmt.Println("Successfully Opened CSV file")
+	fmt.Println("Now let's check it")
 	defer csvFile.Close()
 	csvLines, err := csv.NewReader(csvFile).ReadAll()
 	HandleError(err)
-	if _, err := os.Stat("faltan.csv"); err == nil {
-		os.Remove("faltan.csv")
+	if _, err := os.Stat(outputFile); err == nil {
+		os.Remove(outputFile)
 	}
-	outPutCsv, err := os.Create("faltan.csv")
+	outPutCsv, err := os.Create(outputFile)
 	csvWriter := csv.NewWriter(outPutCsv)
 	for i, line := range csvLines {
 		if i > 0 {
 			//do we have a Acrotomia Mucia that should be Acrotomia mucia
-			matched, _ := regexp.Match(`[A-Z](\p{L}*)\b`, []byte(line[3]))
-			if matched {
-				line[3] = s.ToLower(line[3])
-			}
-			species := s.TrimSpace(line[2]) + " " + s.TrimSpace(line[3])
+			// matched, _ := regexp.Match(`[A-Z](\p{L}*)\b`, []byte(line[3]))
+			// if matched {
+			// 	line[3] = s.ToLower(line[3])
+			// }
+			//species := s.TrimSpace(line[2]) + " " + s.TrimSpace(line[3])
+			species := s.TrimSpace(line[2])
 			if len(species) > 0 {
+
 				hasInfo := getSpPoints(species)
 				if !hasInfo {
 					fmt.Println(line[0]+",", species)
@@ -113,6 +96,7 @@ func main() {
 	}
 	csvWriter.Flush()
 	csvFile.Close()
+	fmt.Println("Done! Output in faltan.csv")
 }
 
 //HandleError prints and exits the program on error
