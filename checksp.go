@@ -18,7 +18,7 @@ func main() {
 		CheckList()
 		break
 	case "articles":
-		CheckMap()
+		Articles()
 		break
 	default:
 		fmt.Println("No options declared")
