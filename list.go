@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	s "strings"
+	"time"
 )
 
 //CheckList checks Luz María's species home page lists agains the inventory API to find species that will not have a corresponding map.
@@ -23,7 +24,9 @@ func CheckList() {
 	csvFile, err := os.Open(inputFile)
 	HandleError(err)
 
-	outputFile := "out/faltanv2.csv"
+	now := time.Now().Unix()
+	snow := fmt.Sprintf("%v", now)
+	outputFile := "out/articulos-" + snow + ".csv"
 	fmt.Println("Checking csv file")
 	defer csvFile.Close()
 	csvLines, err := csv.NewReader(csvFile).ReadAll()
@@ -33,6 +36,7 @@ func CheckList() {
 	}
 	outPutCsv, err := os.Create(outputFile)
 	csvWriter := csv.NewWriter(outPutCsv)
+	defer outPutCsv.Close()
 	for i, line := range csvLines {
 		if i > 0 {
 			//do we have a Acrotomia Mucia that should be Acrotomia mucia
