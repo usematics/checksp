@@ -53,7 +53,7 @@ func Articles() {
 			re = regexp.MustCompile(`(\s)*}`)
 			mapSpecies = re.ReplaceAll(mapSpecies, []byte(""))
 
-			hasInfo := GetSpPoints("species")
+			hasInfo := GetSpPoints(string(mapSpecies))
 			if !hasInfo {
 				fmt.Println(string(mapSpecies) + " Sin Info en API")
 				missing := make([]string, 2)
