@@ -20,7 +20,7 @@ func CheckList() {
 		HandleError(errors.New("M	issing file parameter"))
 	}
 
-	inputFile := os.Args[2] //"data/faltan.csv"
+	inputFile := os.Args[2]
 	csvFile, err := os.Open(inputFile)
 	HandleError(err)
 
@@ -63,5 +63,5 @@ func CheckList() {
 	}
 	csvWriter.Flush()
 	csvFile.Close()
-	fmt.Println("Done! Output in faltan.csv")
+	fmt.Println("Done! Output in " + outputFile)
 }
