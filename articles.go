@@ -36,13 +36,14 @@ func Articles() {
 	HandleError(err)
 	csvWriter := csv.NewWriter(outPutCsv)
 	defer outPutCsv.Close()
-
+	errorFlag := true
 	for rows.Next() {
 		var article Article
 		err = rows.Scan(&article.Title, &article.Text)
 		if err != nil {
 			continue
 		}
+		errorFlag = false //could all be errors?
 		re := regexp.MustCompile(`{(\s)*mapasp(\s|\w)*}`)
 		matched := re.Find([]byte(article.Text))
 		//Do we have a map plugin in the article?
@@ -76,6 +77,10 @@ func Articles() {
 
 		}
 	}
-
 	csvWriter.Flush()
+	if !errorFlag {
+		fmt.Println("Output at " + outputFile)
+	} else {
+		fmt.Println("No valid articles to verify")
+	}
 }
