@@ -10,8 +10,9 @@ import (
 
 //GetSpPoints checks if there is data on a given species
 func GetSpPoints(species string) bool {
+	config := GetConfig()
 
-	urlAdress := "http://localhost:3000/api/species/" + s.Replace(species, " ", "%20", -1)
+	urlAdress := config["URL"] + s.Replace(species, " ", "%20", -1)
 
 	resp, err := http.Get(urlAdress)
 
