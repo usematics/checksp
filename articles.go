@@ -83,7 +83,6 @@ func Articles() {
 					//yes,  append map to species page
 					article.Text += "{mapasp " + species + "}"
 					_, err := db.Query("Update acgj_content set introtext = ? where id = ?", article.Text, article.ID)
-					err = nil
 					if err != nil {
 						fmt.Println(err)
 					} else {
