@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	s "strings"
+	"net/url"
 )
 
 //GetSpPoints checks if there is data on a given species
 func GetSpPoints(species string) bool {
 	config := GetConfig()
 
-	urlAdress := config["URL"] + s.Replace(species, " ", "%20", -1)
-
+	t := url.URL{Path: species}
+	spEncoded := t.String()
+	urlAdress := config["URL"] + spEncoded
 	resp, err := http.Get(urlAdress)
 
 	if resp.StatusCode != 200 {
