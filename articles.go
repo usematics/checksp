@@ -14,6 +14,7 @@ import (
 
 //Article holds text and title for the artilces with a species map.
 type Article struct {
+	ID    int
 	Title string
 	Text  string
 }
@@ -24,7 +25,8 @@ func Articles() {
 	db, err := sql.Open("mysql", env["USER"]+":"+env["PASSWORD"]+"@"+"/"+env["DATABASE"])
 	HandleError(err)
 	defer db.Close()
-	query, err := db.Prepare("select ac.title, ac.introtext from acgj_categories cat, acgj_content as ac where cat.parent_id = 279 and cat.id = ac.catid")
+	query, err := db.Prepare("select ac.id, ac.title, ac.introtext from acgj_categories cat, acgj_content as ac where cat.parent_id = 279 and cat.id = ac.catid and ac.state = 1")
+
 	HandleError(err)
 	rows, err := query.Query()
 	HandleError(err)
@@ -39,12 +41,12 @@ func Articles() {
 	errorFlag := true
 	for rows.Next() {
 		var article Article
-		err = rows.Scan(&article.Title, &article.Text)
+		err = rows.Scan(&article.ID, &article.Title, &article.Text)
 		if err != nil {
 			continue
 		}
 		errorFlag = false //could all be errors?
-		re := regexp.MustCompile(`{(\s)*mapasp(\s|\w)*}`)
+		re := regexp.MustCompile(`{(\s)*mapasp(\s|\w|,)*}`)
 		matched := re.Find([]byte(article.Text))
 		//Do we have a map plugin in the article?
 		if matched != nil {
@@ -52,28 +54,51 @@ func Articles() {
 			mapSpecies := re.ReplaceAll(matched, []byte(""))
 			re = regexp.MustCompile(`(\s)*}`)
 			mapSpecies = re.ReplaceAll(mapSpecies, []byte(""))
-
-			hasInfo := GetSpPoints(string(mapSpecies))
+			species := string(mapSpecies)
+			//Do we have info for that species on the API?
+			hasInfo := GetSpPoints(species)
 			if !hasInfo {
-				fmt.Println(string(mapSpecies) + " Sin Info en API")
 				missing := make([]string, 2)
-				missing[0] = string(mapSpecies)
-				missing[1] = string("Sin Info en API")
+				missing[0] = species
+				missing[1] = string("Mapa Sin Info en API")
 				_ = csvWriter.Write(missing)
+				fmt.Println(species + " Mapa sin Info en API")
 			}
 
 		} else {
 			re = regexp.MustCompile(`\[i\](?P<sp1>(\w|\s)*)\[\/i\](?P<sp2>(\w|\s)*)`)
 			match := FindNamedMatches(re, article.Title)
 			species := fmt.Sprintf("%s %s", s.TrimSpace(match["sp1"]), s.TrimSpace(match["sp2"]))
-			fmt.Println(species + "Sin Mapa")
-			missing := make([]string, 2)
-			missing[0] = s.TrimSpace(species)
-			if missing[0] == "" {
+			species = s.TrimSpace(species)
+			//Can we get a species name from the title of the article?
+			if species != "" {
+				hasInfo := GetSpPoints(species)
+				if !hasInfo {
+					missing := make([]string, 2)
+					missing[0] = species
+					missing[1] = string("Sin Mapa y sin info en API")
+					_ = csvWriter.Write(missing)
+					fmt.Println(species + " Sin Mapa y sin info en API")
+				} else {
+					//yes,  append map to species page
+					article.Text += "{mapasp " + species + "}"
+					_, err := db.Query("Update acgj_content set introtext = ? where id = ?", article.Text, article.ID)
+					err = nil
+					if err != nil {
+						fmt.Println(err)
+					} else {
+						fmt.Println("FIXED: " + species)
+					}
+
+				}
+
+			} else {
+				missing := make([]string, 2)
 				missing[0] = article.Title
+				missing[1] = "Título no calza en especie"
+				_ = csvWriter.Write(missing)
+				fmt.Println(missing[0] + " Título no calza en especie")
 			}
-			missing[1] = "Sin Mapa"
-			_ = csvWriter.Write(missing)
 
 		}
 	}
